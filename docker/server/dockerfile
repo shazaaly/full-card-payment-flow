@@ -1,0 +1,14 @@
+FROM node:20.15.1-slim
+WORKDIR /home/node/app
+COPY ./dist ./dist
+COPY ./.env ./.env
+COPY ./prisma ./prisma
+COPY ./package.json ./package.json
+COPY ./package-lock.json ./package-lock.json
+
+EXPOSE 7000
+RUN apt-get update -y && apt-get install -y openssl
+RUN npm i
+RUN npx prisma generate --schema=./src/infrastructure/postgres/prisma/schema.prisma
+CMD ["node", "dist/main.js"]
+
