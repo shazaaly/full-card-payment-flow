@@ -8,7 +8,77 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String        @unique
+  name          String?
+  payments      Payment[]
+  ledgerEntries LedgerEntry[]
+}
+
+model Payment {
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String  @db.Uuid
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount           Decimal @db.Decimal(19, 4)
+  currency         String  @db.VarChar(3)
+  status           String  @default("CREATED")
+  gateway          String  @default("MOCK")
+  gatewayPaymentId String? @unique
+  idempotencyKey   String  @unique
+
+  createdAt     DateTime      @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime      @updatedAt @db.Timestamp(6)
+  ledgerEntries LedgerEntry[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("payment")
+}
+
+model LedgerEntry {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  paymentId String   @db.Uuid
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+  direction String   @default("CREDIT")
+  amount    Decimal  @db.Decimal(19, 4)
+  currency  String   @db.VarChar(3)
+  type      String   @default("PAYMENT_CAPTURE")
+  createdAt DateTime @default(now())
+
+  @@unique([paymentId, type], name: "paymentId_type_unique_constraint")
+  @@index([userId])
+  @@index([createdAt])
+  @@index([paymentId])
+  @@map("ledger_entries")
+}
+
+model WebhookEvent {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gateway         String   @default("MOCK")
+  gatewayEventId  String?
+  eventType       String
+  processingState String   @default("PENDING")
+  payload         Json?
+  receivedAt      DateTime @default(now())
+
+  @@unique([gateway, gatewayEventId], name: "gateway_event_id_unique_constraint")
+  @@index([gateway, eventType])
+  @@index([processingState])
+  @@map("webhook_event")
+}
+
+model Outbox {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type          String    @default("RECEIPT_EMAIL")
+  payload       Json?
+  status        String    @default("PENDING")
+  nextAttemptAt DateTime? @db.Timestamp(6)
+  attempts      Int       @default(0)
+  createdAt     DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamp(6)
+
+  @@index([status])
+  @@map("outbox")
 }

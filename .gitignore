@@ -1,5 +1,6 @@
 node_modules/
 plan.md
+task.md
 .env
 dist/
 .dist/

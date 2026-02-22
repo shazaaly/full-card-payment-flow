@@ -1,0 +1,45 @@
+export enum LedgerType {
+  PAYMENT_CAPTURE = "PAYMENT_CAPTURE",
+}
+
+export enum LedgerDirection {
+  CREDIT = "CREDIT",
+  DEBIT = "DEBIT",
+}
+
+export enum PaymentStatus {
+  CREATED = "CREATED",
+  PENDING = "PENDING",
+  AUTHORIZED = "AUTHORIZED",
+  CAPTURED = "CAPTURED",
+  FAILED = "FAILED",
+  REFUNDED = "REFUNDED",
+}
+
+export enum WebhookProcessingState {
+  PENDING = "PENDING",
+  PROCESSING = "PROCESSING",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+  IGNORED = "IGNORED",
+  RETRIED = "RETRIED",
+}
+
+
+export enum WebhookEventType {
+  PAYMENT_AUTHORIZED = "PAYMENT_AUTHORIZED",
+  PAYMENT_FAILED = "PAYMENT_FAILED",
+  PAYMENT_SUCCEEDED = "PAYMENT_SUCCEEDED",
+  PAYMENT_CAPTURED = "PAYMENT_CAPTURED",
+  PAYMENT_REFUNDED = "PAYMENT_REFUNDED",
+}
+
+export enum OutboxStatus {
+  PENDING = "PENDING",
+  SENT = "SENT",
+  FAILED = "FAILED",
+}
+
+export enum OutboxType {
+  RECEIPT_EMAIL = "RECEIPT_EMAIL",
+}
