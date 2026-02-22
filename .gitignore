@@ -12,4 +12,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 !.env.example
+prisma.config.js
+prisma.config.js.map
+prisma.config.d.ts
 settings.json

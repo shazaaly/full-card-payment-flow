@@ -1,5 +1,7 @@
 services:
   postgres:
+    env_file:
+      - ../.env
     build:
       context: .
       dockerfile: ./postgres/dockerfile
@@ -15,6 +17,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   api:
+    env_file:
+      - ../.env
     build:
       context: ..
       dockerfile: ./docker/server/dockerfile
