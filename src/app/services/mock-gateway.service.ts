@@ -16,23 +16,12 @@ export interface MockWebhook {
 
 @Injectable()
 export class MockGatewayService {
-  idempotencyKey: string;
-  gatewayPaymentId: string;
-  checkoutUrl: string;
+  private idempotencyKey?: string;
+  private gatewayPaymentId?: string;
+  private checkoutUrl?: string;
   config?: MockGatewayConfig;
 
-  constructor(
-    idempotencyKey: string,
-    gatewayPaymentId: string,
-    checkoutUrl: string,
-    checkoutData: CheckoutDto,
-    config?: MockGatewayConfig,
-  ) {
-    this.idempotencyKey = idempotencyKey;
-    this.gatewayPaymentId = gatewayPaymentId;
-    this.checkoutUrl = checkoutUrl;
-    if (config) this.config = config;
-  }
+  constructor() { }
 
   setConfig(config: MockGatewayConfig): void {
     this.config = { ...this.config, ...config };
@@ -46,7 +35,7 @@ export class MockGatewayService {
 
     const baseWebhook: MockWebhook = {
       eventType: event.eventType,
-      payload: { gatewayPaymentId: this.gatewayPaymentId, url: event.url },
+      payload: { gatewayPaymentId: this.gatewayPaymentId || "", url: event.url },
       delay: this.config?.delayEvent,
     };
 
@@ -71,7 +60,7 @@ export class MockGatewayService {
     if (idempotencyKey && this.idempotencyKey === idempotencyKey) {
       throw new Error("Idempotency key already used");
     }
-    if(!checkoutData) throw new Error("Checkout data is required");
+    if (!checkoutData) throw new Error("Checkout data is required");
     this.idempotencyKey = idempotencyKey;
 
 
@@ -92,8 +81,8 @@ export class MockGatewayService {
     this.checkoutUrl = checkoutUrl;
 
     return {
-      checkoutUrl: this.checkoutUrl,
-      gatewayPaymentId: this.gatewayPaymentId,
+      checkoutUrl: this.checkoutUrl || "",
+      gatewayPaymentId: this.gatewayPaymentId || "",
     };
   }
 }

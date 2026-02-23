@@ -1,13 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 
 export class CheckoutEntity {
-  idempotencyKey: string;
   amount: number;
   currency: string;
   userId: string;
 
   constructor(props: {
-    idempotencyKey: string;
     amount: number;
     currency: string;
     userId: string;
@@ -19,7 +17,6 @@ export class CheckoutEntity {
 
     if (!props.userId) throw new Error("User ID is required");
 
-    this.idempotencyKey = props.idempotencyKey || uuidv4();
     this.amount = props.amount;
     this.currency = props.currency;
     this.userId = props.userId;

@@ -3,15 +3,15 @@ import { CheckoutDto } from "../dto/checkout.dto";
 import { ApplicationService } from "../../app/services/application.service";
 import { CheckoutResponse, GenericResponse } from "../../app/types";
 
-@Controller("/payments​")
+@Controller("/payments")
 export class PaymentController {
-  constructor(private readonly applicationService: ApplicationService) {}
+  constructor(private readonly applicationService: ApplicationService) { }
 
   @Post()
   async createPayment(
     @Body() checkoutData: CheckoutDto,
     @Headers("idempotency-key") idempotencyKey: string,
-  ) :Promise<CheckoutResponse>{
+  ): Promise<CheckoutResponse> {
     return await this.applicationService.createPayment(checkoutData, idempotencyKey);
   }
 }
