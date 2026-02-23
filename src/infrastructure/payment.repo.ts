@@ -60,4 +60,14 @@ export class PaymentRepo implements PaymentPort {
     }
 
   }
+
+  async updatePayment(payment: DomainPayment): Promise<{ status: string; ok: boolean }> {
+    await this.prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: payment.status,
+      },
+    });
+    return { status: "updated", ok: true };
+  }
 }
