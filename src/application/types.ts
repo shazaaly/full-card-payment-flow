@@ -16,6 +16,25 @@ export enum PaymentStatus {
   REFUNDED = "REFUNDED",
 }
 
+export enum PaymentEventType {
+  CHECKOUT_CREATED = "CHECKOUT_CREATED",
+  PAYMENT_PENDING = "PAYMENT_PENDING",
+  PAYMENT_AUTHORIZED = "PAYMENT_AUTHORIZED",
+  PAYMENT_CAPTURED = "PAYMENT_CAPTURED",
+  PAYMENT_FAILED = "PAYMENT_FAILED",
+  PAYMENT_REFUNDED = "PAYMENT_REFUNDED",
+}
+
+export type TransitionOutcome = "APPLIED" | "IGNORED" | "REJECTED";
+
+export interface TransitionDecision {
+  outcome: TransitionOutcome;
+  targetStatus: PaymentStatus;
+  shouldCreateLedgerEntry: boolean;
+  shouldCreateReceiptOutboxEvent: boolean;
+  reason?: string;
+}
+
 export enum WebhookProcessingState {
   PENDING = "PENDING",
   PROCESSING = "PROCESSING",
@@ -24,7 +43,6 @@ export enum WebhookProcessingState {
   IGNORED = "IGNORED",
   RETRIED = "RETRIED",
 }
-
 
 export enum WebhookEventType {
   PAYMENT_PENDING = "PAYMENT_PENDING",
