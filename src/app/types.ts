@@ -61,3 +61,8 @@ export enum OutboxStatus {
 export enum OutboxType {
   RECEIPT_EMAIL = "RECEIPT_EMAIL",
 }
+
+export interface CheckoutResponse {
+  checkoutUrl: string;
+  gatewayPaymentId: string;
+}
