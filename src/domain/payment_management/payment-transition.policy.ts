@@ -2,7 +2,7 @@ import {
   PaymentEventType,
   PaymentStatus,
   TransitionDecision,
-} from "../../application/types";
+} from "../../app/types";
 import { OUTCOME, REASON } from "./types";
 
 const EVENT_TO_TARGET_STATUS: Record<PaymentEventType, PaymentStatus> = {
