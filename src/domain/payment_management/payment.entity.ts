@@ -29,14 +29,13 @@ export class Payment {
     gatewayPaymentId?: string;
     createdAt?: Date;
     updatedAt?: Date;
-    status?: PaymentStatus;  }) {
+    status?: PaymentStatus;
+  }) {
+    if (Number(props.amount) <= 0) throw new Error("Amount must be positive");
 
-      if (Number(props.amount) <= 0) {
-        throw new Error("Amount must be positive");
-      }
-      if (!/^[A-Z]{3}$/.test(props.currency)) {
-        throw new Error("Currency must be ISO 4217 code");
-      }
+    if (!/^[A-Z]{3}$/.test(props.currency))
+      throw new Error("Currency must be ISO 4217 code");
+
     this.id = props.id;
     this.userId = props.userId;
     this.amount = props.amount;
