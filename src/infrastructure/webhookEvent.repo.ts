@@ -30,13 +30,13 @@ export class WebhookEventRepo implements WebhookEventPort {
 
     async findWebhookEventByGatewayEventId(
         gatewayEventId: string
-    ): Promise<WebhookEvent> {
+    ): Promise<WebhookEvent | null> {
         try {
             const event = await this.prismaService.webhookEvent.findFirst({
                 where: { gatewayEventId },
             });
 
-            if (!event) throw new Error("Webhook event not found");
+            if (!event) return null;
 
             return new WebhookEvent({
                 id: event.id,

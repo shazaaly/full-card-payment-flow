@@ -43,8 +43,14 @@ export class TransactionRepo implements TransactionPort {
                     },
                 });
 
-                await tx.ledgerEntry.create({
-                    data: {
+                await tx.ledgerEntry.upsert({
+                    where: {
+                        paymentId_type_unique_constraint: {
+                            paymentId: ledgerEntry.paymentId,
+                            type: ledgerEntry.type,
+                        },
+                    },
+                    create: {
                         id: ledgerEntry.id,
                         paymentId: ledgerEntry.paymentId,
                         userId: ledgerEntry.userId,
@@ -54,6 +60,7 @@ export class TransactionRepo implements TransactionPort {
                         type: ledgerEntry.type,
                         createdAt: ledgerEntry.createdAt,
                     },
+                    update: {}, // No update needed if it exists
                 });
 
                 await tx.outbox.create({

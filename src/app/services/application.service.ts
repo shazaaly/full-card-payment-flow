@@ -9,7 +9,6 @@ import { CheckoutEntity } from "../../domain/checkout/checkout.entity";
 import { UserPort } from "../port/user.port";
 import { UserEntity } from "../../domain/user.entity.ts/user.entity";
 import { LedgerPort } from "../port/ledger";
-import * as crypto from "crypto";
 import { WebhookEvent } from "../../domain/webhookEvent/webhookEvent.entity";
 import { LedgerEntry } from "../../domain/LedgerEntry/ledger-entry.entity";
 import { Outbox } from "../../domain/outbox/outbox.entity";
@@ -42,12 +41,10 @@ export class ApplicationService {
       throw new BadRequestException("Signature header is required");
 
     try {
-      const payloadString = JSON.stringify(payload);
-
-      const expectedSignature = crypto
-        .createHmac("sha256", this.WEBHOOK_SECRET)
-        .update(payloadString)
-        .digest("hex");
+      const expectedSignature = MockGatewayService.generateSignature(
+        payload,
+        this.WEBHOOK_SECRET,
+      );
 
       if (signature !== expectedSignature)
         throw new BadRequestException("Invalid signature");
@@ -162,7 +159,10 @@ export class ApplicationService {
 
 
 
-      const payment_instance = new Payment(webhook_event_instance.payload);
+      const payment = await this.paymentPort.findPaymentById(gatewayEventData.paymentId || gatewayEventData.id);
+      if (!payment) throw new BadRequestException("Payment not found");
+
+      const payment_instance = new Payment(payment);
       payment_instance.applyPaymentStatusUpdate(webhook_event_instance.type as unknown as PaymentEventType);
 
       const ledger_entry_instance = new LedgerEntry({
@@ -175,14 +175,12 @@ export class ApplicationService {
         currency: payment_instance.currency,
         createdAt: new Date(),
       });
-      // await this.ledgerPort.createLedgerEntry(ledger_entry_instance);
       const outbox_event_instance = new Outbox({
         id: uuidv4(),
         type: OutboxType.RECEIPT_EMAIL,
         payload: payment_instance,
         createdAt: new Date(),
       });
-      // await this.outboxPort.createOutbox(outbox_event_instance);
 
       await this.transactionPort.runEventTransaction(webhook_event_instance, payment_instance, ledger_entry_instance, outbox_event_instance);
 
