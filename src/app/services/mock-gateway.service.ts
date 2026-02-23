@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { CheckoutResponse, PaymentEventType, WebhookEventType } from "../types";
+import { CheckoutDto } from "../../interface/dto/checkout.dto";
 
 export interface MockGatewayConfig {
   sendDuplicateEvents?: boolean;
@@ -15,15 +16,19 @@ export interface MockWebhook {
 
 @Injectable()
 export class MockGatewayService {
+  idempotencyKey: string;
   gatewayPaymentId: string;
   checkoutUrl: string;
   config?: MockGatewayConfig;
 
   constructor(
+    idempotencyKey: string,
     gatewayPaymentId: string,
     checkoutUrl: string,
+    checkoutData: CheckoutDto,
     config?: MockGatewayConfig,
   ) {
+    this.idempotencyKey = idempotencyKey;
     this.gatewayPaymentId = gatewayPaymentId;
     this.checkoutUrl = checkoutUrl;
     if (config) this.config = config;
@@ -62,7 +67,14 @@ export class MockGatewayService {
     return webhooks;
   }
 
-  checkout(): CheckoutResponse {
+  checkout(checkoutData: CheckoutDto, idempotencyKey: string): CheckoutResponse {
+    if (idempotencyKey && this.idempotencyKey === idempotencyKey) {
+      throw new Error("Idempotency key already used");
+    }
+    if(!checkoutData) throw new Error("Checkout data is required");
+    this.idempotencyKey = idempotencyKey;
+
+
     const gatewayPaymentId = crypto.randomUUID();
     const checkoutUrl = `https://mock-gateway.local/checkout?gatewayPaymentId=${gatewayPaymentId}`;
 
