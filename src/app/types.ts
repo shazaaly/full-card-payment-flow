@@ -63,6 +63,11 @@ export enum OutboxType {
 }
 
 export interface CheckoutResponse {
-  checkoutUrl: string;
-  gatewayPaymentId: string;
+  checkoutUrl?: string;
+  gatewayPaymentId?: string;
+}
+
+export interface GenericResponse {
+  status: string;
+  ok: boolean;
 }

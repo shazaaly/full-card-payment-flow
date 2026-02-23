@@ -25,6 +25,7 @@ model Payment {
   gateway          String  @default("MOCK")
   gatewayPaymentId String? @unique
   idempotencyKey   String  @unique
+  checkoutUrl      String? @db.Text
 
   createdAt     DateTime      @default(now()) @db.Timestamp(6)
   updatedAt     DateTime      @updatedAt @db.Timestamp(6)

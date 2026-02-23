@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 export class Payment {
   id: string;
   userId: string;
-  amount: string;
+  amount: number;
   currency: string;
   status: PaymentStatus;
   gateway: string;
@@ -18,15 +18,16 @@ export class Payment {
   idempotencyKey: string;
   createdAt: Date;
   updatedAt: Date;
-
+  checkoutUrl?: string;
   constructor(props: {
     id: string;
     userId: string;
-    amount: string;
+    amount: number;
     currency: string;
     gateway: string;
     idempotencyKey: string;
     gatewayPaymentId?: string;
+    checkoutUrl?: string;
     createdAt?: Date;
     updatedAt?: Date;
     status?: PaymentStatus;
@@ -44,6 +45,7 @@ export class Payment {
     this.idempotencyKey = props.idempotencyKey ?? uuidv4();
     this.status = props.status ?? PaymentStatus.CREATED;
     this.gatewayPaymentId = props.gatewayPaymentId;
+    this.checkoutUrl = props.checkoutUrl;
     this.createdAt = props.createdAt ?? new Date();
     this.updatedAt = props.updatedAt ?? new Date();
   }
