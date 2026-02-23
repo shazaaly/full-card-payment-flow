@@ -3,6 +3,9 @@ import { WebhookEventPort } from "../app/port/webhookEvent.port";
 import { WebhookEvent } from "../domain/webhookEvent/webhookEvent.entity";
 import { GenericResponse, WebhookEventType } from "../app/types";
 
+import { Injectable } from "@nestjs/common";
+
+@Injectable()
 export class WebhookEventRepo implements WebhookEventPort {
     constructor(private readonly prismaService: PrismaService) { }
 

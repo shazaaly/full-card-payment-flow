@@ -15,17 +15,20 @@ import { LedgerEntry } from "../../domain/LedgerEntry/ledger-entry.entity";
 import { Outbox } from "../../domain/outbox/outbox.entity";
 import { WebhookEventPort } from "../port/webhookEvent.port";
 import { OutboxPort } from "../port/outbox.port";
+import { TransactionPort } from "../port/transaction.port";
 
 @Injectable()
 export class ApplicationService {
+  private readonly WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
+
   constructor(
     private readonly mockGatewayService: MockGatewayService,
-    private readonly WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!,
     @Inject("PaymentPort") private readonly paymentPort: PaymentPort,
     @Inject("UserPort") private readonly userPort: UserPort,
     @Inject("LedgerPort") private readonly ledgerPort: LedgerPort,
     @Inject("WebhookEventPort") private readonly webhookEventPort: WebhookEventPort,
     @Inject("OutboxPort") private readonly outboxPort: OutboxPort,
+    @Inject("TransactionPort") private readonly transactionPort: TransactionPort,
   ) { }
 
   validateIdempotencyKey(idempotencyKey: string): void {
@@ -158,12 +161,9 @@ export class ApplicationService {
       });
 
 
-      await this.webhookEventPort.createWebhookEvent(webhook_event_instance);
 
       const payment_instance = new Payment(webhook_event_instance.payload);
       payment_instance.applyPaymentStatusUpdate(webhook_event_instance.type as unknown as PaymentEventType);
-
-      await this.paymentPort.updatePayment(payment_instance);
 
       const ledger_entry_instance = new LedgerEntry({
         userId: payment_instance.userId,
@@ -175,14 +175,17 @@ export class ApplicationService {
         currency: payment_instance.currency,
         createdAt: new Date(),
       });
-      await this.ledgerPort.createLedgerEntry(ledger_entry_instance);
+      // await this.ledgerPort.createLedgerEntry(ledger_entry_instance);
       const outbox_event_instance = new Outbox({
         id: uuidv4(),
         type: OutboxType.RECEIPT_EMAIL,
         payload: payment_instance,
         createdAt: new Date(),
       });
-      await this.outboxPort.createOutbox(outbox_event_instance);
+      // await this.outboxPort.createOutbox(outbox_event_instance);
+
+      await this.transactionPort.runEventTransaction(webhook_event_instance, payment_instance, ledger_entry_instance, outbox_event_instance);
+
 
     } catch (error) {
       throw new BadRequestException(error.message);

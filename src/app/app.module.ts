@@ -14,6 +14,9 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { HttpModule } from "@nestjs/axios";
 import { PaymentController } from "../interface/controllers/payment.controller";
 import { LedgerRepo } from "../infrastructure/ledger.repo";
+import { TransactionRepo } from "../infrastructure/transaction.repo";
+import { WebhookEventRepo } from "../infrastructure/webhookEvent.repo";
+import { OutboxRepo } from "../infrastructure/outbox.repo";
 import { LedgerPort } from "./port/ledger";
 
 @Module({
@@ -44,6 +47,18 @@ import { LedgerPort } from "./port/ledger";
     {
       provide: "LedgerPort",
       useClass: LedgerRepo,
+    },
+    {
+      provide: "WebhookEventPort",
+      useClass: WebhookEventRepo,
+    },
+    {
+      provide: "TransactionPort",
+      useClass: TransactionRepo,
+    },
+    {
+      provide: "OutboxPort",
+      useClass: OutboxRepo,
     },
   ],
 })
