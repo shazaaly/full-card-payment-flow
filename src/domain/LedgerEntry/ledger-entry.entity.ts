@@ -6,7 +6,7 @@ export interface LedgerEntryProps {
   paymentId: string;
   userId: string;
   direction: LedgerDirection;
-  amount: string;
+  amount: number;
   currency: string;
   type?: LedgerType;
   createdAt?: Date;
@@ -17,7 +17,7 @@ export class LedgerEntry {
   paymentId: string;
   userId: string;
   direction: LedgerDirection;
-  amount: string;
+  amount: number;
   currency: string;
   type: LedgerType;
   createdAt: Date;
@@ -28,17 +28,17 @@ export class LedgerEntry {
     )
       throw new Error(`Invalid ledger direction: ${props.direction}`);
 
-      if (parseFloat(props.amount) <= 0) {
-        throw new Error(`LedgerEntry amount must be positive, got: ${props.amount}`);
-      }
+    if (props.amount <= 0) {
+      throw new Error(`LedgerEntry amount must be positive, got: ${props.amount}`);
+    }
 
-      if (!/^[A-Z]{3}$/.test(props.currency)) {
-        throw new Error(`Invalid currency: ${props.currency}`);
-      }
+    if (!/^[A-Z]{3}$/.test(props.currency)) {
+      throw new Error(`Invalid currency: ${props.currency}`);
+    }
 
-      if (props.type && !Object.values(LedgerType).includes(props.type)) {
-        throw new Error(`Invalid ledger type: ${props.type}`);
-      }
+    if (props.type && !Object.values(LedgerType).includes(props.type)) {
+      throw new Error(`Invalid ledger type: ${props.type}`);
+    }
 
     this.id = props.id ?? uuidv4();
     this.paymentId = props.paymentId;

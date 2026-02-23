@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { CheckoutResponse, PaymentEventType, WebhookEventType } from "../types";
+import { CheckoutDto } from "../../interface/dto/checkout.dto";
 
 export interface MockGatewayConfig {
   sendDuplicateEvents?: boolean;
@@ -15,19 +16,12 @@ export interface MockWebhook {
 
 @Injectable()
 export class MockGatewayService {
-  gatewayPaymentId: string;
-  checkoutUrl: string;
+  private idempotencyKey?: string;
+  private gatewayPaymentId?: string;
+  private checkoutUrl?: string;
   config?: MockGatewayConfig;
 
-  constructor(
-    gatewayPaymentId: string,
-    checkoutUrl: string,
-    config?: MockGatewayConfig,
-  ) {
-    this.gatewayPaymentId = gatewayPaymentId;
-    this.checkoutUrl = checkoutUrl;
-    if (config) this.config = config;
-  }
+  constructor() { }
 
   setConfig(config: MockGatewayConfig): void {
     this.config = { ...this.config, ...config };
@@ -41,7 +35,7 @@ export class MockGatewayService {
 
     const baseWebhook: MockWebhook = {
       eventType: event.eventType,
-      payload: { gatewayPaymentId: this.gatewayPaymentId, url: event.url },
+      payload: { gatewayPaymentId: this.gatewayPaymentId || "", url: event.url },
       delay: this.config?.delayEvent,
     };
 
@@ -62,7 +56,14 @@ export class MockGatewayService {
     return webhooks;
   }
 
-  checkout(): CheckoutResponse {
+  checkout(checkoutData: CheckoutDto, idempotencyKey: string): CheckoutResponse {
+    if (idempotencyKey && this.idempotencyKey === idempotencyKey) {
+      throw new Error("Idempotency key already used");
+    }
+    if (!checkoutData) throw new Error("Checkout data is required");
+    this.idempotencyKey = idempotencyKey;
+
+
     const gatewayPaymentId = crypto.randomUUID();
     const checkoutUrl = `https://mock-gateway.local/checkout?gatewayPaymentId=${gatewayPaymentId}`;
 
@@ -80,8 +81,8 @@ export class MockGatewayService {
     this.checkoutUrl = checkoutUrl;
 
     return {
-      checkoutUrl: this.checkoutUrl,
-      gatewayPaymentId: this.gatewayPaymentId,
+      checkoutUrl: this.checkoutUrl || "",
+      gatewayPaymentId: this.gatewayPaymentId || "",
     };
   }
 }
