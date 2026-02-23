@@ -44,7 +44,6 @@ export enum WebhookProcessingState {
   RETRIED = "RETRIED",
 }
 
-
 export enum WebhookEventType {
   PAYMENT_PENDING = "PAYMENT_PENDING",
   PAYMENT_AUTHORIZED = "PAYMENT_AUTHORIZED",
