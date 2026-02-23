@@ -13,6 +13,8 @@ import { UserRepo } from "../infrastructure/user.repo";
 import { ScheduleModule } from "@nestjs/schedule";
 import { HttpModule } from "@nestjs/axios";
 import { PaymentController } from "../interface/controllers/payment.controller";
+import { LedgerRepo } from "../infrastructure/ledger.repo";
+import { LedgerPort } from "./port/ledger";
 
 @Module({
   imports: [
@@ -38,6 +40,10 @@ import { PaymentController } from "../interface/controllers/payment.controller";
     {
       provide: "UserPort",
       useClass: UserRepo,
+    },
+    {
+      provide: "LedgerPort",
+      useClass: LedgerRepo,
     },
   ],
 })

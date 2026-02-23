@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { CheckoutResponse, PaymentEventType, PaymentStatus } from "../types";
+import { CheckoutResponse, LedgerType, PaymentEventType, PaymentStatus, PaymentWithLedgerType } from "../types";
 import { MockGatewayService } from "./mock-gateway.service";
 import { CheckoutDto } from "../../interface/dto/checkout.dto";
 import { PaymentPort } from "../port/payment.port";
@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import { CheckoutEntity } from "../../domain/checkout/checkout.entity";
 import { UserPort } from "../port/user.port";
 import { UserEntity } from "../../domain/user.entity.ts/user.entity";
+import { LedgerPort } from "../port/ledger";
 
 @Injectable()
 export class ApplicationService {
@@ -15,6 +16,7 @@ export class ApplicationService {
     private readonly mockGatewayService: MockGatewayService,
     @Inject("PaymentPort") private readonly paymentPort: PaymentPort,
     @Inject("UserPort") private readonly userPort: UserPort,
+    @Inject("LedgerPort") private readonly ledgerPort: LedgerPort,
   ) { }
 
   validateIdempotencyKey(idempotencyKey: string): void {
@@ -87,12 +89,27 @@ export class ApplicationService {
     }
   }
 
-  async getPaymentById(id: string): Promise<Payment> {
-    try {
-      const payment = await this.paymentPort.findPaymentById(id);
-      return payment;
-    } catch (error) {
-      throw new BadRequestException(error.message);
+  async getPaymentById(id: string): Promise<PaymentWithLedgerType> {
+    const payment = await this.paymentPort.findPaymentById(id);
+    if (!payment) {
+      throw new BadRequestException(`Payment with id ${id} not found`);
     }
+
+    const paymentInstance = new Payment(payment);
+
+    let ledgerType: LedgerType | null = null;
+
+    try {
+      const ledger = await this.ledgerPort.findLedgerByPaymentId(id);
+      ledgerType = ledger.type;
+    } catch {
+      // Ledger not found → just return null for ledger_type
+      ledgerType = null;
+    }
+
+    return {
+      ...paymentInstance,
+      ledger_type: ledgerType || null,
+    };
   }
 }

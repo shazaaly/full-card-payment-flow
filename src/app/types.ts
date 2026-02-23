@@ -1,3 +1,5 @@
+import { Payment } from "../domain/payment_management/payment.entity";
+
 export enum LedgerType {
   PAYMENT_CAPTURE = "PAYMENT_CAPTURE",
 }
@@ -71,3 +73,9 @@ export interface GenericResponse {
   status: string;
   ok: boolean;
 }
+
+export type PaymentWithoutMethods = Omit<Payment, "applyPaymentStatusUpdate">;
+
+export type PaymentWithLedgerType = PaymentWithoutMethods & {
+  ledger_type: LedgerType | null;
+};

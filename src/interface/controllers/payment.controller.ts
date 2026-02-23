@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Headers, Param, Post } from "@nestjs/common";
 import { CheckoutDto } from "../dto/checkout.dto";
 import { ApplicationService } from "../../app/services/application.service";
-import { CheckoutResponse } from "../../app/types";
+import { CheckoutResponse, PaymentWithLedgerType } from "../../app/types";
 import { Payment } from "../../domain/payment_management/payment.entity";
 
 @Controller("/payments")
@@ -17,7 +17,7 @@ export class PaymentController {
   }
 
   @Get(":id")
-  async getPaymentById(@Param("id") id: string): Promise<Payment> {
+  async getPaymentById(@Param("id") id: string): Promise<PaymentWithLedgerType> {
     return this.applicationService.getPaymentById(id);
   }
 }
