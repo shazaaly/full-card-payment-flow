@@ -76,9 +76,12 @@ export class MockGatewayService {
       console.log("Webhooks ready to send:", webhooks);
     }, delay);
 
+    this.gatewayPaymentId = gatewayPaymentId;
+    this.checkoutUrl = checkoutUrl;
+
     return {
-      checkoutUrl,
-      gatewayPaymentId,
+      checkoutUrl: this.checkoutUrl,
+      gatewayPaymentId: this.gatewayPaymentId,
     };
   }
 }
