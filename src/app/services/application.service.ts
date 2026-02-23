@@ -86,4 +86,13 @@ export class ApplicationService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async getPaymentById(id: string): Promise<Payment> {
+    try {
+      const payment = await this.paymentPort.findPaymentById(id);
+      return payment;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
 }

@@ -1,7 +1,8 @@
-import { Body, Controller, Headers, Post } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Param, Post } from "@nestjs/common";
 import { CheckoutDto } from "../dto/checkout.dto";
 import { ApplicationService } from "../../app/services/application.service";
-import { CheckoutResponse, GenericResponse } from "../../app/types";
+import { CheckoutResponse } from "../../app/types";
+import { Payment } from "../../domain/payment_management/payment.entity";
 
 @Controller("/payments")
 export class PaymentController {
@@ -13,5 +14,10 @@ export class PaymentController {
     @Headers("idempotency-key") idempotencyKey: string,
   ): Promise<CheckoutResponse> {
     return await this.applicationService.createPayment(checkoutData, idempotencyKey);
+  }
+
+  @Get(":id")
+  async getPaymentById(@Param("id") id: string): Promise<Payment> {
+    return this.applicationService.getPaymentById(id);
   }
 }
