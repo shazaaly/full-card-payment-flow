@@ -19,6 +19,7 @@ import { TransactionRepo } from "../infrastructure/transaction.repo";
 import { WebhookEventRepo } from "../infrastructure/webhookEvent.repo";
 import { OutboxRepo } from "../infrastructure/outbox.repo";
 import { LedgerPort } from "./port/ledger";
+import { LoggerService } from "./services/logger.service";
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { LedgerPort } from "./port/ledger";
   ],
   controllers: [PaymentController, WebhookController],
   providers: [
+    LoggerService,
     AppResolver,
     ApplicationService,
     MockGatewayService,
