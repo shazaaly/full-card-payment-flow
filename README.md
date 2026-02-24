@@ -19,7 +19,7 @@ flowchart TD
     B --> D
 ```
 
-Each layer only talks to the one below it through **port interfaces** (`src/app/port/`). The domain never imports Prisma or Redis — the repos implement the ports and get injected.
+Each layer only talks to the one below it through **port interfaces** (`src/app/port/`). The domain never imports Prisma or Redis, the repos implement the ports and get injected.
 
 ---
 
@@ -29,7 +29,7 @@ Each layer only talks to the one below it through **port interfaces** (`src/app/
 |---|---|---|
 | **Hexagonal architecture** | Swap DB/cache without touching domain logic | More files, more boilerplate |
 | **State machine** for payment status | Enforces valid transitions, handles out-of-order webhooks safely | Requires explicit transition map upfront |
-| **Outbox pattern** for receipt emails | Async event survives crashes — created in same DB transaction as capture | Needs a separate worker to drain the outbox table |
+| **Outbox pattern** for receipt emails | Async event survives crashes, created in same DB transaction as capture | Needs a separate worker to drain the outbox table |
 | **Idempotency key** on payment creation | Client can safely retry without double-charging | Key must be stored and indexed |
 | **Redis cache** for webhook dedup | Fast O(1) first-pass check before hitting the DB | Cache can expire (24h TTL), falls back to DB check |
 | **Mock gateway** | No real payment provider needed to develop/test | Not production-ready |
@@ -132,14 +132,14 @@ In `TransactionRepo.runEventTransaction` a single `Prisma.$transaction` does, in
 Redis `setEvent` is called after the transaction commits. If any step fails, the transaction rolls back.
 
 ### 2. Duplicate webhooks rejected at two levels
-1. **Redis** — `CachingService.eventExists(payload.id)` checks key `webhook_event:${id}` first (TTL 86400s).
-2. **DB** — `findWebhookEventByGatewayEventId(payload.id)`; then in the transaction, `WebhookEvent` has `@@unique([gateway, gatewayEventId])` so a second insert with same gateway + gatewayEventId would fail.
+1. **Redis**, `CachingService.eventExists(payload.id)` checks key `webhook_event:${id}` first (TTL 86400s).
+2. **DB**, `findWebhookEventByGatewayEventId(payload.id)`; then in the transaction, `WebhookEvent` has `@@unique([gateway, gatewayEventId])` so a second insert with same gateway + gatewayEventId would fail.
 
 ### 3. Out-of-order webhooks handled by the state machine
 `Payment.applyPaymentStatusUpdate()` calls `decidePaymentTransition()` in `payment-transition.policy.ts`. The entity only updates its `status` when outcome is `APPLIED`. Outcomes:
-- `APPLIED` — valid transition; entity status updated, then transaction runs (WebhookEvent + Payment + Ledger + Outbox).
-- `IGNORED` — duplicate or out-of-order (e.g. already CAPTURED); entity status unchanged; transaction still runs (so event is stored, payment row unchanged by update, ledger upsert no-op for same key, outbox row created).
-- `REJECTED` — invalid transition; entity status unchanged; transaction still runs.
+- `APPLIED`, valid transition; entity status updated, then transaction runs (WebhookEvent + Payment + Ledger + Outbox).
+- `IGNORED`, duplicate or out-of-order (e.g. already CAPTURED); entity status unchanged; transaction still runs (so event is stored, payment row unchanged by update, ledger upsert no-op for same key, outbox row created).
+- `REJECTED`, invalid transition; entity status unchanged; transaction still runs.
 Duplicate events are avoided by Redis + `findWebhookEventByGatewayEventId` before we build the transaction.
 
 ### 4. Idempotent payment creation
@@ -189,23 +189,23 @@ To run the full stack in Docker (`docker compose up`), ensure the api service ha
 
 You need a valid `userId` (existing in the `User` table). The mock gateway does not send webhooks; you call `POST /webhooks/mock` yourself.
 
-### Step 1 — Create a payment
+### Step 1, Create a payment
 ```bash
 curl -X POST http://localhost:7000/payments \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: unique-key-001" \
   -d '{ "amount": 5000, "currency": "USD", "userId": "<valid-user-uuid>" }'
 ```
-**Returns:** `{ "checkoutUrl": "https://mock-gateway.local/checkout?gatewayPaymentId=...", "gatewayPaymentId": "..." }` — no `paymentId` in the response.
+**Returns:** `{ "checkoutUrl": "https://mock-gateway.local/checkout?gatewayPaymentId=...", "gatewayPaymentId": "..." }`, no `paymentId` in the response.
 
-### Step 2 — Get the internal payment id
+### Step 2, Get the internal payment id
 The webhook handler looks up payment by `paymentId` (internal UUID). Since create does not return it, get it from the DB:
 ```bash
 # Example: using psql or any Postgres client
 # SELECT id FROM payment WHERE idempotency_key = 'unique-key-001';
 ```
 
-### Step 3 — Simulate a webhook (payment captured)
+### Step 3, Simulate a webhook (payment captured)
 Signature = HMAC-SHA256 of the **exact JSON body** (as string), with `WEBHOOK_SECRET`, output hex. Header name is `x-signature`.
 
 Body must include: `id` (unique event id for dedup), `type` (e.g. `PAYMENT_CAPTURED`), `paymentId` (internal payment UUID from step 2).
@@ -222,16 +222,16 @@ curl -X POST http://localhost:7000/webhooks/mock \
   }'
 ```
 
-### Step 4 — Check payment status
+### Step 4, Check payment status
 ```bash
 curl http://localhost:7000/payments/<PAYMENT_UUID>
 ```
 Returns the payment (with `status: "CAPTURED"`) and `ledger_type` when a ledger entry exists.
 
-### Step 5 — Test idempotency
+### Step 5, Test idempotency
 Repeat Step 1 with the same `Idempotency-Key`. Response is the same `{ checkoutUrl, gatewayPaymentId }`; no second payment is created.
 
-### Step 6 — Test duplicate webhook
+### Step 6, Test duplicate webhook
 Repeat Step 3 with the same `id`. Redis `eventExists(payload.id)` returns true; handler returns 200 without processing.
 
 ---
