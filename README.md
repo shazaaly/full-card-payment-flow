@@ -19,7 +19,7 @@ flowchart TD
     B --> D
 ```
 
-Each layer only talks to the one below it through **port interfaces** (`src/app/port/`). The domain never imports Prisma or Redis — the repos implement the ports and get injected.
+Each layer only talks to the one below it through **port interfaces** (`src/app/port/`). The domain never imports Prisma or Redis. the repos implement the ports and get injected.
 
 ---
 
