@@ -181,7 +181,7 @@ npm run start:dev
 
 App runs at `http://localhost:,3000 `.
 
-To run the full stack in Docker (`docker compose up`), ensure the api service has `REDIS_URL=redis://redis:6379` (and `DATABASE_URL` pointing at the postgres service). The compose file currently sets only `DATABASE_URL` and `SERVER_PORT` for the api; add `REDIS_URL` to the api `environment` if you run the API in Docker.
+To run the full stack in Docker (`docker compose up`), use the compose file in `docker/`: the api service is configured with `DATABASE_URL` (pointing at the postgres service), `SERVER_PORT`, and `REDIS_URL=redis://redis:6379`.
 
 ---
 
