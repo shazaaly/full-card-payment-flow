@@ -179,7 +179,7 @@ npm run prisma:migrate
 npm run start:dev
 ```
 
-App runs at `http://localhost:,3000 `.
+App runs at `http://localhost:3000`.
 
 To run the full stack in Docker (`docker compose up`), use the compose file in `docker/`: the api service is configured with `DATABASE_URL` (pointing at the postgres service), `SERVER_PORT`, and `REDIS_URL=redis://redis:6379`.
 
@@ -191,7 +191,7 @@ You need a valid `userId` (existing in the `User` table). The mock gateway does 
 
 ### Step 1, Create a payment
 ```bash
-curl -X POST http://localhost:,3000 /payments \
+curl -X POST http://localhost:3000/payments \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: unique-key-001" \
   -d '{ "amount": 5000, "currency": "USD", "userId": "<valid-user-uuid>" }'
@@ -212,7 +212,7 @@ Body must include: `id` (unique event id for dedup), `type` (e.g. `PAYMENT_CAPTU
 
 ```bash
 # Replace <PAYMENT_UUID> and <SIGNATURE> (compute with same body + WEBHOOK_SECRET).
-curl -X POST http://localhost:,3000 /webhooks/mock \
+curl -X POST http://localhost:3000/webhooks/mock \
   -H "Content-Type: application/json" \
   -H "x-signature: <SIGNATURE>" \
   -d '{
@@ -224,7 +224,7 @@ curl -X POST http://localhost:,3000 /webhooks/mock \
 
 ### Step 4, Check payment status
 ```bash
-curl http://localhost:,3000 /payments/<PAYMENT_UUID>
+curl http://localhost:3000/payments/<PAYMENT_UUID>
 ```
 Returns the payment (with `status: "CAPTURED"`) and `ledger_type` when a ledger entry exists.
 
