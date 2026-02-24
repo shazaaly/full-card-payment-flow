@@ -8,6 +8,7 @@ import { PrismaModule } from "../infrastructure/postgres/prisma/prisma.module";
 import { AppResolver } from "../interface/resolvers/app.resolver";
 import { ApplicationService } from "./services/application.service";
 import { MockGatewayService } from "./services/mock-gateway.service";
+import { CachingService } from "./services/caching.service";
 import { PaymentRepo } from "../infrastructure/payment.repo";
 import { UserRepo } from "../infrastructure/user.repo";
 import { ScheduleModule } from "@nestjs/schedule";
@@ -37,6 +38,7 @@ import { LoggerService } from "./services/logger.service";
   providers: [
     LoggerService,
     AppResolver,
+    CachingService,
     ApplicationService,
     MockGatewayService,
     {

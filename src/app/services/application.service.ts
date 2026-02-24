@@ -15,6 +15,7 @@ import { Outbox } from "../../domain/outbox/outbox.entity";
 import { WebhookEventPort } from "../port/webhookEvent.port";
 import { OutboxPort } from "../port/outbox.port";
 import { TransactionPort } from "../port/transaction.port";
+import { CachingService } from "./caching.service";
 
 @Injectable()
 export class ApplicationService {
@@ -28,6 +29,7 @@ export class ApplicationService {
     @Inject("WebhookEventPort") private readonly webhookEventPort: WebhookEventPort,
     @Inject("OutboxPort") private readonly outboxPort: OutboxPort,
     @Inject("TransactionPort") private readonly transactionPort: TransactionPort,
+    private readonly cachingService: CachingService,
   ) { }
 
   validateIdempotencyKey(idempotencyKey: string): void {
@@ -145,8 +147,14 @@ export class ApplicationService {
     try {
       this.validateSignature(gatewayEventData, signature);
 
+      const eventExistsInCache = await this.cachingService.eventExists(gatewayEventData.id);
+      if (eventExistsInCache) return;
+
       const existing_webhook_event = await this.webhookEventPort.findWebhookEventByGatewayEventId(gatewayEventData.id);
-      if (existing_webhook_event) return
+      if (existing_webhook_event) {
+        await this.cachingService.setEvent(gatewayEventData.id, existing_webhook_event);
+        return;
+      }
 
       const webhook_event_instance = new WebhookEvent({
         id: uuidv4(),
@@ -184,6 +192,7 @@ export class ApplicationService {
 
       await this.transactionPort.runEventTransaction(webhook_event_instance, payment_instance, ledger_entry_instance, outbox_event_instance);
 
+      await this.cachingService.setEvent(gatewayEventData.id, webhook_event_instance);
 
     } catch (error) {
       throw new BadRequestException(error.message);

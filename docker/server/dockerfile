@@ -2,7 +2,7 @@ FROM node:20.15.1-slim
 WORKDIR /home/node/app
 COPY ./dist ./dist
 COPY ./.env ./.env
-COPY ./prisma ./prisma
+COPY ./src/infrastructure/postgres/prisma ./src/infrastructure/postgres/prisma
 COPY ./package.json ./package.json
 COPY ./package-lock.json ./package-lock.json
 
