@@ -11,25 +11,24 @@ model User {
   id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email         String        @unique
   name          String?
-  payments      Payment[]
   ledgerEntries LedgerEntry[]
+  payments      Payment[]
 }
 
 model Payment {
-  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId           String  @db.Uuid
-  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount           Decimal @db.Decimal(19, 4)
-  currency         String  @db.VarChar(3)
-  status           String  @default("CREATED")
-  gateway          String  @default("MOCK")
-  gatewayPaymentId String? @unique
-  idempotencyKey   String  @unique
-  checkoutUrl      String? @db.Text
-
-  createdAt     DateTime      @default(now()) @db.Timestamp(6)
-  updatedAt     DateTime      @updatedAt @db.Timestamp(6)
-  ledgerEntries LedgerEntry[]
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String        @db.Uuid
+  amount           Decimal       @db.Decimal(19, 4)
+  currency         String        @db.VarChar(3)
+  status           String        @default("CREATED")
+  gateway          String        @default("MOCK")
+  gatewayPaymentId String?       @unique
+  idempotencyKey   String        @unique
+  createdAt        DateTime      @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime      @updatedAt @db.Timestamp(6)
+  checkoutUrl      String?
+  ledgerEntries    LedgerEntry[]
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -39,14 +38,14 @@ model Payment {
 model LedgerEntry {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String   @db.Uuid
-  user      User     @relation(fields: [userId], references: [id])
   paymentId String   @db.Uuid
-  payment   Payment  @relation(fields: [paymentId], references: [id])
   direction String   @default("CREDIT")
   amount    Decimal  @db.Decimal(19, 4)
   currency  String   @db.VarChar(3)
   type      String   @default("PAYMENT_CAPTURE")
   createdAt DateTime @default(now())
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([paymentId, type], name: "paymentId_type_unique_constraint")
   @@index([userId])

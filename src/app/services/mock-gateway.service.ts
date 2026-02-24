@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import * as crypto from "crypto";
 import { CheckoutResponse, PaymentEventType, WebhookEventType } from "../types";
 import { CheckoutDto } from "../../interface/dto/checkout.dto";
 
@@ -16,6 +17,14 @@ export interface MockWebhook {
 
 @Injectable()
 export class MockGatewayService {
+  static generateSignature(payload: any, secret: string): string {
+    const payloadString = JSON.stringify(payload);
+    return crypto
+      .createHmac("sha256", secret)
+      .update(payloadString)
+      .digest("hex");
+  }
+
   private idempotencyKey?: string;
   private gatewayPaymentId?: string;
   private checkoutUrl?: string;

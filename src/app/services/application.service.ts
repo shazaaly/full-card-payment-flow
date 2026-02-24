@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { CheckoutResponse, LedgerType, PaymentEventType, PaymentStatus, PaymentWithLedgerType } from "../types";
+import { CheckoutResponse, LedgerDirection, LedgerType, OutboxType, PaymentEventType, PaymentStatus, PaymentWithLedgerType } from "../types";
 import { MockGatewayService } from "./mock-gateway.service";
 import { CheckoutDto } from "../../interface/dto/checkout.dto";
 import { PaymentPort } from "../port/payment.port";
@@ -9,19 +9,48 @@ import { CheckoutEntity } from "../../domain/checkout/checkout.entity";
 import { UserPort } from "../port/user.port";
 import { UserEntity } from "../../domain/user.entity.ts/user.entity";
 import { LedgerPort } from "../port/ledger";
+import { WebhookEvent } from "../../domain/webhookEvent/webhookEvent.entity";
+import { LedgerEntry } from "../../domain/LedgerEntry/ledger-entry.entity";
+import { Outbox } from "../../domain/outbox/outbox.entity";
+import { WebhookEventPort } from "../port/webhookEvent.port";
+import { OutboxPort } from "../port/outbox.port";
+import { TransactionPort } from "../port/transaction.port";
 
 @Injectable()
 export class ApplicationService {
+  private readonly WEBHOOK_SECRET = process.env.WEBHOOK_SECRET!;
+
   constructor(
     private readonly mockGatewayService: MockGatewayService,
     @Inject("PaymentPort") private readonly paymentPort: PaymentPort,
     @Inject("UserPort") private readonly userPort: UserPort,
     @Inject("LedgerPort") private readonly ledgerPort: LedgerPort,
+    @Inject("WebhookEventPort") private readonly webhookEventPort: WebhookEventPort,
+    @Inject("OutboxPort") private readonly outboxPort: OutboxPort,
+    @Inject("TransactionPort") private readonly transactionPort: TransactionPort,
   ) { }
 
   validateIdempotencyKey(idempotencyKey: string): void {
     if (!idempotencyKey) {
       throw new BadRequestException("Idempotency-Key header is required");
+    }
+  }
+
+  validateSignature(payload: any, signature: string): void {
+    if (!signature)
+      throw new BadRequestException("Signature header is required");
+
+    try {
+      const expectedSignature = MockGatewayService.generateSignature(
+        payload,
+        this.WEBHOOK_SECRET,
+      );
+
+      if (signature !== expectedSignature)
+        throw new BadRequestException("Invalid signature");
+
+    } catch (err) {
+      throw new BadRequestException("Failed to validate signature");
     }
   }
 
@@ -103,7 +132,6 @@ export class ApplicationService {
       const ledger = await this.ledgerPort.findLedgerByPaymentId(id);
       ledgerType = ledger.type;
     } catch {
-      // Ledger not found → just return null for ledger_type
       ledgerType = null;
     }
 
@@ -111,5 +139,54 @@ export class ApplicationService {
       ...paymentInstance,
       ledger_type: ledgerType || null,
     };
+  }
+
+  async receiveGatewayEvent(gatewayEventData: any, signature: string): Promise<void> {
+    try {
+      this.validateSignature(gatewayEventData, signature);
+
+      const existing_webhook_event = await this.webhookEventPort.findWebhookEventByGatewayEventId(gatewayEventData.id);
+      if (existing_webhook_event) return
+
+      const webhook_event_instance = new WebhookEvent({
+        id: uuidv4(),
+        gateway: "MOCK",
+        gatewayEventId: gatewayEventData.id,
+        type: gatewayEventData.type,
+        payload: gatewayEventData,
+        receivedAt: new Date(),
+      });
+
+
+
+      const payment = await this.paymentPort.findPaymentById(gatewayEventData.paymentId || gatewayEventData.id);
+      if (!payment) throw new BadRequestException("Payment not found");
+
+      const payment_instance = new Payment(payment);
+      payment_instance.applyPaymentStatusUpdate(webhook_event_instance.type as unknown as PaymentEventType);
+
+      const ledger_entry_instance = new LedgerEntry({
+        userId: payment_instance.userId,
+        direction: LedgerDirection.CREDIT,
+        id: uuidv4(),
+        paymentId: payment_instance.id,
+        type: LedgerType.PAYMENT_CAPTURE,
+        amount: payment_instance.amount,
+        currency: payment_instance.currency,
+        createdAt: new Date(),
+      });
+      const outbox_event_instance = new Outbox({
+        id: uuidv4(),
+        type: OutboxType.RECEIPT_EMAIL,
+        payload: payment_instance,
+        createdAt: new Date(),
+      });
+
+      await this.transactionPort.runEventTransaction(webhook_event_instance, payment_instance, ledger_entry_instance, outbox_event_instance);
+
+
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }

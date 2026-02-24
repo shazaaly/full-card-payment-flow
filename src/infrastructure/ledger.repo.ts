@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "./postgres/prisma/prisma.service";
 import { LedgerPort } from "../app/port/ledger";
 import { LedgerEntry } from "../domain/LedgerEntry/ledger-entry.entity";
-import { LedgerDirection, LedgerType } from "../app/types";
+import { GenericResponse, LedgerDirection, LedgerType } from "../app/types";
 
 @Injectable()
 export class LedgerRepo implements LedgerPort {
@@ -31,6 +31,26 @@ export class LedgerRepo implements LedgerPort {
 
     } catch (error) {
       throw new Error("findLedgerByPaymentId Error: " + error.message);
+    }
+  }
+
+  async createLedgerEntry(ledgerEntry: LedgerEntry): Promise<GenericResponse> {
+    try {
+      await this.prisma.ledgerEntry.create({
+        data: {
+          id: ledgerEntry.id,
+          paymentId: ledgerEntry.paymentId,
+          userId: ledgerEntry.userId,
+          direction: ledgerEntry.direction,
+          amount: ledgerEntry.amount,
+          currency: ledgerEntry.currency,
+          type: ledgerEntry.type,
+          createdAt: ledgerEntry.createdAt,
+        },
+      });
+      return { status: "created", ok: true };
+    } catch (error) {
+      throw new Error("createLedgerEntry Error: " + error.message);
     }
   }
 }

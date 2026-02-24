@@ -13,7 +13,11 @@ import { UserRepo } from "../infrastructure/user.repo";
 import { ScheduleModule } from "@nestjs/schedule";
 import { HttpModule } from "@nestjs/axios";
 import { PaymentController } from "../interface/controllers/payment.controller";
+import { WebhookController } from "../interface/controllers/webhook.controller";
 import { LedgerRepo } from "../infrastructure/ledger.repo";
+import { TransactionRepo } from "../infrastructure/transaction.repo";
+import { WebhookEventRepo } from "../infrastructure/webhookEvent.repo";
+import { OutboxRepo } from "../infrastructure/outbox.repo";
 import { LedgerPort } from "./port/ledger";
 
 @Module({
@@ -28,7 +32,7 @@ import { LedgerPort } from "./port/ledger";
     ScheduleModule.forRoot(),
     HttpModule,
   ],
-  controllers: [PaymentController],
+  controllers: [PaymentController, WebhookController],
   providers: [
     AppResolver,
     ApplicationService,
@@ -44,6 +48,18 @@ import { LedgerPort } from "./port/ledger";
     {
       provide: "LedgerPort",
       useClass: LedgerRepo,
+    },
+    {
+      provide: "WebhookEventPort",
+      useClass: WebhookEventRepo,
+    },
+    {
+      provide: "TransactionPort",
+      useClass: TransactionRepo,
+    },
+    {
+      provide: "OutboxPort",
+      useClass: OutboxRepo,
     },
   ],
 })

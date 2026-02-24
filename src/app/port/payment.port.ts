@@ -6,4 +6,5 @@ export interface PaymentPort {
   findPaymentByIdempotencyKey(idempotencyKey: string): Promise<PrismaPayment | null>;
   createPayment(payment: DomainPayment): Promise<GenericResponse>;
   findPaymentById(id: string): Promise<DomainPayment>;
+  updatePayment(payment: DomainPayment): Promise<GenericResponse>;
 }
