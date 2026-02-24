@@ -21,6 +21,7 @@ import { WebhookEventRepo } from "../infrastructure/webhookEvent.repo";
 import { OutboxRepo } from "../infrastructure/outbox.repo";
 import { LedgerPort } from "./port/ledger";
 import { LoggerService } from "./services/logger.service";
+import { UserController } from "../interface/controllers/userController";
 
 @Module({
   imports: [
@@ -34,7 +35,7 @@ import { LoggerService } from "./services/logger.service";
     ScheduleModule.forRoot(),
     HttpModule,
   ],
-  controllers: [PaymentController, WebhookController],
+  controllers: [PaymentController, WebhookController, UserController],
   providers: [
     LoggerService,
     AppResolver,

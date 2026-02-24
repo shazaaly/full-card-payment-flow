@@ -23,4 +23,23 @@ export class UserRepo implements UserPort {
       throw new Error("User not found");
     }
   }
+
+  async createUser(user: UserEntity): Promise<UserEntity> {
+    try {
+      const createdUser = await this.prisma.user.create({
+        data: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+      });
+      return new UserEntity({
+        id: createdUser.id,
+        email: createdUser.email,
+        name: createdUser.name ?? "",
+      });
+    } catch (error) {
+      throw new Error("Failed to create user");
+    }
+  }
 }   

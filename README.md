@@ -162,7 +162,7 @@ DATABASE_URL=postgresql://user:pass@localhost:5422/payments
 POSTGRES_USER=user
 POSTGRES_PASSWORD=pass
 POSTGRES_DB=payments
-SERVER_PORT=,3000 
+SERVER_PORT=,3001 
 REDIS_URL=redis://localhost:6379
 WEBHOOK_SECRET=your-secret
 ```
@@ -179,7 +179,7 @@ npm run prisma:migrate
 npm run start:dev
 ```
 
-App runs at `http://localhost:3000`.
+App runs at `http://localhost:3001`.
 
 To run the full stack in Docker (`docker compose up`), use the compose file in `docker/`: the api service is configured with `DATABASE_URL` (pointing at the postgres service), `SERVER_PORT`, and `REDIS_URL=redis://redis:6379`.
 
@@ -189,12 +189,23 @@ To run the full stack in Docker (`docker compose up`), use the compose file in `
 
 You need a valid `userId` (existing in the `User` table). The mock gateway does not send webhooks; you call `POST /webhooks/mock` yourself.
 
+### Step 0, Create a user
+```bash
+curl -X POST http://localhost:3001/users/create \
+  -H "Content-Type: application/json" \
+  -d '{ "id": "550e8400-e29b-41d4-a716-446655440000", "email": "demo@example.com", "name": "Demo User" }'
+```
+Use the returned `id` (or the one you sent) as `userId` in the next step.
+
 ### Step 1, Create a payment
 ```bash
-curl -X POST http://localhost:3000/payments \
+curl -X POST http://localhost:3001/users/create \
   -H "Content-Type: application/json" \
-  -H "Idempotency-Key: unique-key-001" \
-  -d '{ "amount": 5000, "currency": "USD", "userId": "<valid-user-uuid>" }'
+  -d '{
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "demo@example.com",
+    "name": "Demo User"
+  }'
 ```
 **Returns:** `{ "checkoutUrl": "https://mock-gateway.local/checkout?gatewayPaymentId=...", "gatewayPaymentId": "..." }`, no `paymentId` in the response.
 
@@ -212,7 +223,7 @@ Body must include: `id` (unique event id for dedup), `type` (e.g. `PAYMENT_CAPTU
 
 ```bash
 # Replace <PAYMENT_UUID> and <SIGNATURE> (compute with same body + WEBHOOK_SECRET).
-curl -X POST http://localhost:3000/webhooks/mock \
+curl -X POST http://localhost:3001/webhooks/mock \
   -H "Content-Type: application/json" \
   -H "x-signature: <SIGNATURE>" \
   -d '{
@@ -224,7 +235,7 @@ curl -X POST http://localhost:3000/webhooks/mock \
 
 ### Step 4, Check payment status
 ```bash
-curl http://localhost:3000/payments/<PAYMENT_UUID>
+curl http://localhost:3001/payments/<PAYMENT_UUID>
 ```
 Returns the payment (with `status: "CAPTURED"`) and `ledger_type` when a ledger entry exists.
 

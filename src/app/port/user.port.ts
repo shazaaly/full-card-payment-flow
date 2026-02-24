@@ -3,4 +3,5 @@ import { UserEntity } from "../../domain/user.entity.ts/user.entity";
 
 export interface UserPort {
   findUserById(id: string): Promise<UserEntity>;
+  createUser(user: UserEntity): Promise<UserEntity>;
 }

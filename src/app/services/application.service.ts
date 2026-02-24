@@ -56,6 +56,24 @@ export class ApplicationService {
     }
   }
 
+  async createUser(user: UserEntity): Promise<UserEntity> {
+    try {
+      const createdUser = await this.userPort.createUser(user);
+      return createdUser;
+    } catch (error) {
+      throw new BadRequestException("Failed to create user");
+    }
+  }
+
+  async findUserById(id: string): Promise<UserEntity> {
+    try {
+      const user = await this.userPort.findUserById(id);
+      return user;
+    } catch (error) {
+      throw new BadRequestException("User not found");
+    }
+  }
+
   async createPayment(
     checkoutData: CheckoutDto,
     idempotencyKey: string,
