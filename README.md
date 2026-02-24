@@ -255,3 +255,9 @@ Repeat Step 3 with the same `id`. Redis `eventExists(payload.id)` returns true; 
 - **API:** REST + GraphQL (Apollo)
 - **Containers:** Docker + Docker Compose
 - **Runtime:** Node.js 20
+
+---
+
+<p align="center">
+  <em>✧</em> <strong>Shaza Aly</strong> <em>✧</em>
+</p>
