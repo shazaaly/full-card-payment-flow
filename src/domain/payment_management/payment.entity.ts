@@ -37,12 +37,15 @@ export class Payment {
     if (!/^[A-Z]{3}$/.test(props.currency))
       throw new Error("Currency must be ISO 4217 code");
 
+    if (!props.idempotencyKey) throw new Error("Idempotency key is required");
+
+
     this.id = props.id;
     this.userId = props.userId;
     this.amount = props.amount;
     this.currency = props.currency;
     this.gateway = props.gateway;
-    this.idempotencyKey = props.idempotencyKey ?? uuidv4();
+    this.idempotencyKey = props.idempotencyKey
     this.status = props.status ?? PaymentStatus.CREATED;
     this.gatewayPaymentId = props.gatewayPaymentId;
     this.checkoutUrl = props.checkoutUrl;
